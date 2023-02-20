@@ -3,31 +3,21 @@
 
 import UIKit
 
-final class ToDoHeaderView: UIView {
+final class ToDoHeaderView: UITableViewHeaderFooterView, ReusableView {
     
-    private let status: ToDoState
-    private let count: Int
-    
-    private lazy var titleLabel: UILabel = {
+    private var titleLabel: UILabel = {
         let label = UILabel()
         
-        label.text = status.description
         label.font = .preferredFont(forTextStyle: .title1)
         label.translatesAutoresizingMaskIntoConstraints = false
         
         return label
     }()
     
-    private lazy var listCountLabel: ItemCountLabel = {
-        let label = ItemCountLabel(count: self.count)
-        
-        return label
-    }()
+    private var listCountLabel: ItemCountLabel = .init(frame: .zero)
     
-    init(status: ToDoState, count: Int) {
-        self.status = status
-        self.count = count
-        super.init(frame: .zero)
+    override init(reuseIdentifier: String?) {
+        super.init(reuseIdentifier: Self.reuseIdentifier)
         setupViews()
     }
     
@@ -36,10 +26,9 @@ final class ToDoHeaderView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func draw(_ rect: CGRect) {
-        super.draw(rect)
-        
-        listCountLabel.layer.cornerRadius = listCountLabel.bounds.size.height * 0.5
+    func configure(status: ToDoState, count: Int) {
+        titleLabel.text = status.description
+        listCountLabel.updateCount(with: count)
     }
     
     private func setupViews() {

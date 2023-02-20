@@ -9,6 +9,12 @@ final class ToDoDetailView: UIView {
         static let titlePlaceHolder = "Title"
     }
     
+    var hasTitle: Bool {
+        guard let count = titleTextField.text?.split(separator: " ").count else { return false }
+        
+        return count < 1 ? false : true
+    }
+    
     private let titleTextField: UITextField = {
         let textField = UITextField()
         
@@ -83,18 +89,11 @@ final class ToDoDetailView: UIView {
         ])
     }
     
-    func validToDoTitle() -> Bool {
-        if titleTextField.text != .init() {
-            return true
-        }
-        return false
-    }
-    
-    func currentContent() -> ToDo {
-        return ToDo(title: titleTextField.text ?? .init(),
-                    body: bodyTextView.text,
-                    deadline: datePicker.date,
-                    state: .toDo)
+    func currentContent() -> ToDoDataForm {
+        return ToDoDataForm(title: titleTextField.text ?? .init(),
+                            body: bodyTextView.text,
+                            deadline: datePicker.date,
+                            state: .toDo)
     }
     
     func setupContent(data: ToDo) {

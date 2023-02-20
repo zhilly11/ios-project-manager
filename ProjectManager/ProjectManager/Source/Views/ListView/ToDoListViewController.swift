@@ -20,7 +20,10 @@ final class ToDoListViewController: UIViewController {
         
         tableView.backgroundColor = .systemGray6
         tableView.sectionHeaderHeight = 50
-        tableView.register(ToDoCell.self, forCellReuseIdentifier: ToDoCell.reuseIdentifier)
+        tableView.register(ToDoCell.self,
+                           forCellReuseIdentifier: ToDoCell.reuseIdentifier)
+        tableView.register(ToDoHeaderView.self,
+                           forHeaderFooterViewReuseIdentifier: ToDoHeaderView.reuseIdentifier)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
         return tableView
@@ -33,13 +36,7 @@ final class ToDoListViewController: UIViewController {
                 for: indexPath
             ) as? ToDoCell else { return UITableViewCell() }
             
-            cell.configure(title: item.title, body: item.body, deadline: item.deadline)
-            
-            if item.isOverDeadline {
-                cell.changeDeadlineColor(.systemRed)
-            } else {
-                cell.changeDeadlineColor(.black)
-            }
+            cell.configure(with: item)
             
             return cell
         }
@@ -81,19 +78,19 @@ final class ToDoListViewController: UIViewController {
     private func setupViewModel() {
         switch status {
         case .toDo:
-            viewModel.todoModel.bind { item in
-                self.appendData(item: item)
-                self.tableView.reloadData()
+            viewModel.todoModel.bind { [weak self] item in
+                self?.appendData(item: item)
+                self?.tableView.reloadData()
             }
         case .doing:
-            viewModel.doingModel.bind { item in
-                self.appendData(item: item)
-                self.tableView.reloadData()
+            viewModel.doingModel.bind { [weak self] item in
+                self?.appendData(item: item)
+                self?.tableView.reloadData()
             }
         case .done:
-            viewModel.doneModel.bind { item in
-                self.appendData(item: item)
-                self.tableView.reloadData()
+            viewModel.doneModel.bind { [weak self] item in
+                self?.appendData(item: item)
+                self?.tableView.reloadData()
             }
         }
     }
@@ -106,15 +103,6 @@ final class ToDoListViewController: UIViewController {
         dataSource.apply(snapshot)
     }
     
-    private func deleteToDo(indexPath: Int) {
-        var currentSnapshot = dataSource.snapshot()
-        guard let item = viewModel.fetchToDo(index: indexPath, state: self.status) else { return }
-        
-        currentSnapshot.deleteItems([item])
-        dataSource.apply(currentSnapshot)
-        viewModel.delete(indexPath: indexPath, state: self.status)
-    }
-    
     private func updateState(indexPath: Int, state: ToDoState) {
         viewModel.updateStatus(indexPath: indexPath, currentState: self.status, changeState: state)
     }
@@ -122,7 +110,14 @@ final class ToDoListViewController: UIViewController {
 
 extension ToDoListViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let headerView = ToDoHeaderView(status: self.status, count: self.viewModel.count(state: self.status))
+        guard let headerView = tableView.dequeueReusableHeaderFooterView(
+            withIdentifier: ToDoHeaderView.reuseIdentifier
+        ) as? ToDoHeaderView else {
+            return UIView()
+        }
+        
+        headerView.configure(status: self.status,
+                             count: viewModel.count(state: self.status))
         
         return headerView
     }
@@ -144,9 +139,9 @@ extension ToDoListViewController: UITableViewDelegate {
     ) -> UISwipeActionsConfiguration? {
         let deleteAction = UIContextualAction(style: .destructive,
                                               title: nil) { [weak self] (_, _, success) in
-            if self?.viewModel.fetchToDo(index: indexPath.item, state: self?.status ?? .toDo) != nil {
-                self?.deleteToDo(indexPath: indexPath.item)
-                self?.tableView.reloadData()
+            if let self = self,
+               self.viewModel.fetchToDo(index: indexPath.item, state: self.status) != nil {
+                self.viewModel.delete(index: indexPath.item, state: self.status)
                 success(true)
             } else {
                 success(false)
@@ -162,16 +157,13 @@ extension ToDoListViewController: UITableViewDelegate {
         contextMenuConfigurationForRowAt indexPath: IndexPath,
         point: CGPoint
     ) -> UIContextMenuConfiguration? {
-        let moveToTodo = UIAction(title: NSLocalizedString("Move To Todo", comment: ""),
-                                  image: nil) { _ in
+        let moveToTodo = UIAction(title: "Move To Todo", image: nil) { _ in
             self.updateState(indexPath: indexPath.item, state: .toDo)
         }
-        let moveToDoing = UIAction(title: NSLocalizedString("Move To Doing", comment: ""),
-                                   image: nil) { _ in
+        let moveToDoing = UIAction(title: "Move To Doing", image: nil) { _ in
             self.updateState(indexPath: indexPath.item, state: .doing)
         }
-        let moveToDone = UIAction(title: NSLocalizedString("Move To Done", comment: ""),
-                                  image: nil) { _ in
+        let moveToDone = UIAction(title: "Move To Done", image: nil) { _ in
             self.updateState(indexPath: indexPath.item, state: .done)
         }
         

@@ -4,9 +4,17 @@
 import Foundation
 
 extension DateFormatter {
-    static func convert(date: Date) -> String {
+    static func convertToString(to date: Date, style: DateFormatter.Style) -> String {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .long
+        dateFormatter.dateStyle = style
+        
+        return dateFormatter.string(from: date)
+    }
+    
+    static func convertToFullString(to date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy년 MM월 dd일 a HH:mm:ss"
+        dateFormatter.locale = Locale(identifier: "ko_KR")
         
         return dateFormatter.string(from: date)
     }

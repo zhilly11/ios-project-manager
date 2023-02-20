@@ -15,7 +15,14 @@ final class AddToDoViewController: UIViewController {
     }
     
     let viewModel: ToDoListViewModel
-    private let detailView = ToDoDetailView()
+    
+    private let detailView: ToDoDetailView = {
+        let view = ToDoDetailView()
+        
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        return view
+    }()
     
     init(viewModel: ToDoListViewModel) {
         self.viewModel = viewModel
@@ -55,7 +62,6 @@ final class AddToDoViewController: UIViewController {
     }
     
     private func setupView() {
-        detailView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(detailView)
         
         let safeArea = view.safeAreaLayoutGuide
@@ -75,7 +81,7 @@ final class AddToDoViewController: UIViewController {
     
     @objc
     private func tappedDoneButton() {
-        if detailView.validToDoTitle() == false {
+        guard detailView.hasTitle == true else {
             let alert = UIAlertController(title: "제목을 입력해주세요.", message: nil, preferredStyle: .alert)
             let okAction = UIAlertAction(title: "확인", style: .default)
             
@@ -84,12 +90,13 @@ final class AddToDoViewController: UIViewController {
             
             return
         }
+        
         let data = detailView.currentContent()
-        let toDo = ToDo(title: data.title,
+        let todo = ToDo(title: data.title,
                         body: data.body,
                         deadline: data.deadline,
-                        state: .toDo)
-        viewModel.addToDo(item: toDo)
+                        state: data.state)
+        viewModel.addToDo(item: todo)
         
         dismiss(animated: true)
     }

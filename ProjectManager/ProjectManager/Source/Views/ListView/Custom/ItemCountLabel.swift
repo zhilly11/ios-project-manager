@@ -11,11 +11,20 @@ final class ItemCountLabel: UILabel {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        setupView()
     }
     
-    convenience init(frame: CGRect = .zero, count: Int) {
-        self.init(frame: frame)
-        text = convertToText(count)
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        layer.cornerRadius = bounds.size.height / 2
+    }
+    
+    private func setupView() {
         textColor = .white
         font = .preferredFont(forTextStyle: .headline)
         textAlignment = .center
@@ -24,14 +33,8 @@ final class ItemCountLabel: UILabel {
         translatesAutoresizingMaskIntoConstraints = false
     }
     
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func draw(_ rect: CGRect) {
-        super.draw(rect)
-        layer.cornerRadius = bounds.size.height / 2
+    func updateCount(with count: Int) {
+        text = convertToText(count)
     }
     
     private func convertToText(_ count: Int) -> String {

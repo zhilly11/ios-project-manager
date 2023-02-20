@@ -1,30 +1,32 @@
-//  ProjectManager - MainViewController.swift
+//  ProjectManager - ProjectManagerViewController.swift
 //  created by zhilly on 2023/01/11
 
 import UIKit
 
-final class MainViewController: UIViewController {
+final class ProjectManagerViewController: UIViewController {
     
     private enum Constant {
         static let title = "Project Manager"
+        static let leftBarButtonTitle = "History"
     }
     
-    private let viewModel = ToDoListViewModel()
+    private let listViewModel = ToDoListViewModel()
+    private let historyViewModel = HistoryViewModel()
     
     private lazy var todoTableView: ToDoListViewController = {
-        let tableView = ToDoListViewController(status: .toDo, viewModel: viewModel)
+        let tableView = ToDoListViewController(status: .toDo, viewModel: listViewModel)
         
         return tableView
     }()
     
     private lazy var doingTableView: ToDoListViewController = {
-        let tableView = ToDoListViewController(status: .doing, viewModel: viewModel)
+        let tableView = ToDoListViewController(status: .doing, viewModel: listViewModel)
         
         return tableView
     }()
     
     private lazy var doneTableView: ToDoListViewController = {
-        let tableView = ToDoListViewController(status: .done, viewModel: viewModel)
+        let tableView = ToDoListViewController(status: .done, viewModel: listViewModel)
         
         return tableView
     }()
@@ -53,11 +55,17 @@ final class MainViewController: UIViewController {
     }
     
     private func setupBarButtonItem() {
+        let leftBarButton = UIBarButtonItem(title: Constant.leftBarButtonTitle,
+                                            style: .done,
+                                            target: self,
+                                            action: #selector(presentHistoryPopoverView))
+        
         let rightBarButton = UIBarButtonItem(image: UIImage(systemName: "plus"),
                                              style: .plain,
                                              target: self,
                                              action: #selector(presentDetailView))
         
+        navigationItem.setLeftBarButton(leftBarButton, animated: true)
         navigationItem.setRightBarButton(rightBarButton, animated: true)
     }
     
@@ -84,4 +92,21 @@ final class MainViewController: UIViewController {
         
         present(navigationController, animated: true)
     }
+    
+    @objc
+    private func presentHistoryPopoverView() {
+        let popoverViewController = HistoryTableViewController(viewModel: self.historyViewModel)
+        popoverViewController.modalPresentationStyle = .popover
+        popoverViewController.preferredContentSize = CGSize(width: 400, height: 400)
+        guard let sender = self.navigationItem.leftBarButtonItem else { return }
+        
+        let popoverVC = popoverViewController.popoverPresentationController
+        popoverVC?.delegate = self
+        popoverVC?.barButtonItem = sender
+        
+        popoverVC?.permittedArrowDirections = .up
+        present(popoverViewController, animated: true)
+    }
 }
+
+extension ProjectManagerViewController: UIPopoverPresentationControllerDelegate { }
